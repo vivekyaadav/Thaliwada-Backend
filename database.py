@@ -2,12 +2,13 @@ from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, 
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
 
-db_url = os.getenv("DATABASE_URL")
 
 class Database:
-    def __init__(self, db_url):
+    def __init__(self):
+        load_dotenv()
+        # Load the database URL from environment variables
+        db_url = os.getenv("DB_URL")
         self.engine = create_engine(db_url, echo=True)
         self.metadata = MetaData()
 
@@ -82,11 +83,11 @@ class Database:
                 print(f"Error fetching items: {e}")
                 return []
             
-    def fetch_orders_by_date(self):
+    def fetch_orders_by_date(self, date):
         with self.engine.connect() as connection:
             trans = connection.begin()
             try:
-                sel = select(self.orders).order_by(self.orders.c.order_date)
+                sel = select(self.orders).where(self.orders.c.order_date == date)
                 result = connection.execute(sel)
                 trans.commit()
                 return result.fetchall()
@@ -95,11 +96,11 @@ class Database:
                 print(f"Error fetching orders: {e}")
                 return []
             
-    def fetch_orders_by_status(self):
+    def fetch_orders_by_status(self, status):
         with self.engine.connect() as connection:
             trans = connection.begin()
             try:
-                sel = select(self.orders).order_by(self.orders.c.order_status)
+                sel = select(self.orders).where(self.orders.c.order_status == status)
                 result = connection.execute(sel)
                 trans.commit()
                 return result.fetchall()
@@ -108,11 +109,11 @@ class Database:
                 print(f"Error fetching orders: {e}")
                 return []
 
-    def fetch_orders_by_customer(self):
+    def fetch_orders_by_customer(self, customer_name):
         with self.engine.connect() as connection:
             trans = connection.begin()
             try:
-                sel = select(self.orders).order_by(self.orders.c.customer_name)
+                sel = select(self.orders).where(self.orders.c.customer_name == customer_name)
                 result = connection.execute(sel)
                 trans.commit()
                 return result.fetchall()
@@ -122,6 +123,10 @@ class Database:
                 return []
 
 if __name__ == "__main__":
-    create_tables()
+    db = Database()
+    # db.insert_item("Indian Thali",
+    #                 "Rich and creamy black lentils slow-cooked with butter, cream, and aromatic spices, served with basmati rice, naan, pickle, and raita",
+    #                 299)
     # drop_tables()
+    print(db.fetch_items())
     print("Database setup complete.")
